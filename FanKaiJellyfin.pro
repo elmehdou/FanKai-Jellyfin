@@ -58,7 +58,7 @@ HEADERS += \
     qmllinker.h \
     user.h
 
-INCLUDEPATH += -L$$PWD/VLCQt/include
+INCLUDEPATH += $$PWD/VLCQt/include
 
 LIBS += -L$$PWD/VLC/lib
 LIBS += -L$$PWD/VLCQt/lib
