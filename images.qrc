@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/backarrow.svg</file>
+        <file>images/close.svg</file>
+        <file>images/closed-caption.svg</file>
+        <file>images/language.svg</file>
+        <file>images/pause.svg</file>
+        <file>images/play.svg</file>
+        <file>images/stop.svg</file>
+        <file>images/logo.png</file>
+    </qresource>
+</RCC>

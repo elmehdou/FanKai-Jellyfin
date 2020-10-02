@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Header.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/Player/MainPlayer.qml</file>
+        <file>qml/CustomComponents/HLayoutSpacer.qml</file>
+        <file>qml/CustomComponents/PlayerButton.qml</file>
+        <file>qml/CustomComponents/VLayoutSeparator.qml</file>
+        <file>qml/Delegates/ListDelegate.qml</file>
+        <file>qml/Delegates/ListHeaderDelegate.qml</file>
+        <file>qml/Listers/VerticalLister.qml</file>
+        <file>qml/Modals/LoginModal.qml</file>
+        <file>qml/Pages/LoginPage.qml</file>
+        <file>qml/Pages/MainPage.qml</file>
+    </qresource>
+</RCC>
