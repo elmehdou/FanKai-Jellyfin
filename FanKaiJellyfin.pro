@@ -58,20 +58,22 @@ HEADERS += \
     qmllinker.h \
     user.h
 
-#INCLUDEPATH += C:\install\vlc-qt\mingw64\bin
-#LIBS += -LC:\install\vlc-qt\mingw64\bin
+INCLUDEPATH += -L$$PWD/VLCQt/include
 
-INCLUDEPATH += C:\install\vlc-qt\mingw64\include
-
-LIBS += -LC:\install\vlc-qt\mingw64\lib
-#LIBS += -LC:\install\vlc-qt\mingw64\bin
-LIBS += -L"C:\Program Files\VideoLAN\VLC"
+LIBS += -L$$PWD/VLC/lib
+LIBS += -L$$PWD/VLCQt/lib
 
 LIBS += -llibvlc
 LIBS += -llibvlccore
-LIBS += -llibVLCQtCore.dll
-LIBS += -llibVLCQtQml.dll
-LIBS += -llibVLCQtWidgets.dll
 
+win32:CONFIG(release, debug|release) {
+    LIBS += -llibVLCQtCore.dll
+    LIBS += -llibVLCQtQml.dll
+    LIBS += -llibVLCQtWidgets.dll
+} else:win32:CONFIG(debug, debug|release) {
+    LIBS += -llibVLCQtCored.dll
+    LIBS += -llibVLCQtQmld.dll
+    LIBS += -llibVLCQtWidgetsd.dll
+}
 
 RC_ICONS = logo.ico

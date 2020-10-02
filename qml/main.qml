@@ -27,7 +27,7 @@ Window {
         }
         if (String(rootLoader.item.mediaPlayer.playerUrl) !== playerUrl){
             rootLoader.item.mediaPlayer.url = playerUrl;
-            rootLoader.item.mediaPlayer.time = Jellyfin.currentEpisode.positionTicks;
+//            rootLoader.item.mediaPlayer.time = Jellyfin.currentEpisode.positionTicks;
         }
     }
 
