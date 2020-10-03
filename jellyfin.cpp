@@ -171,8 +171,9 @@ void Jellyfin::updateEpisodes(Sptr<Node> series, Sptr<Node> season)
     setWorking(true);
 }
 
-void Jellyfin::updatePlaybackInfo(Sptr<Episode> episode, bool playAfterUpdate)
+void Jellyfin::play(Sptr<Episode> episode)
 {
+    // Initials checks
     if (accessToken.isEmpty()){
         qDebug() << "[ PlaybackInfo update ] Access Token is empty.";
         return;
@@ -184,19 +185,31 @@ void Jellyfin::updatePlaybackInfo(Sptr<Episode> episode, bool playAfterUpdate)
         return;
     }
 
-    // Audio stream is returned according to a playSessionId
-    // which in turn is defined by the index in the PlaybackInfoUrl (dirty hack)
-    QString audioStreamIndex = "1";
-    Sptr<MediaStream> currentAudioStream = episode->getCurrentAudioStream();
+    // M3u8 file is returned according to a playSessionId
+    // which in turn is defined by the audio stream index in the PlaybackInfoUrl
+
+    Sptr<AudioStream> currentAudioStream = episode->getCurrentAudioStream().dynamicCast<AudioStream>();
     if (currentAudioStream){
-        audioStreamIndex = episode->getCurrentAudioStream()->getIndex();
+        // Get the audio stream index in case it has already been selected
+        // Get playsessionId if any for the current audio stream
+        QString audioStreamIndex = QString::number(currentAudioStream->getIndex());
+        QString playSessionId = currentAudioStream->getPlaySessionId();
+
+        if (!playSessionId.isEmpty()){
+            // Prepare m3u8 file url, set episode as current and set player url
+            QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, audioStreamIndex, playSessionId);
+            setCurrentEpisodeQ(episode.data());
+            QmlLinker::goToPlayer(targetUrl);
+            return;
+        }
     }
 
+    // If no currentAudioStream then the episode has not been loaded yet
     QNetworkAccessManager *manager = new QNetworkAccessManager();
-
     QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
         setWorking(false);
 
+        // Simple error checking
         if (reply->error() != QNetworkReply::NoError){
             qDebug() << "[ Data update ] Request response error." << reply->errorString();
             reply->manager()->deleteLater();
@@ -210,15 +223,15 @@ void Jellyfin::updatePlaybackInfo(Sptr<Episode> episode, bool playAfterUpdate)
             return;
         }
 
+        // Get current audio stream since the playSessionId might be the missing info
         Sptr<AudioStream> audioStream = episode->getCurrentAudioStream().dynamicCast<AudioStream>();
 
-
+        // Check if the mediaSource list is populated
         QList<Sptr<MediaSource>> list = episode->getMediaSources();
         if (!list.count()){
+
             // First time requesting episode
             // Populate Media sources and streams
-            // set the first audio stream as current
-
             QJsonArray jsonArray = jsonData.value("MediaSources").toArray();
             for (const QJsonValue &value : jsonArray){
                 QJsonObject sourceJson = value.toObject();
@@ -226,103 +239,31 @@ void Jellyfin::updatePlaybackInfo(Sptr<Episode> episode, bool playAfterUpdate)
                 source->fromJson(sourceJson);
                 list << source;
             }
-
             episode->setMediaSources(list);
 
-            if (!episode->getCurrentAudioStream()){
-                for (Sptr<MediaStream> stream : list.at(0)->getStreams()){
-                    if (stream->getType() == MediaStream::Type::Audio){
-                        audioStream = stream.dynamicCast<AudioStream>();
-                        episode->setCurrentAudioStream(stream);
-                        break;
-                    }
+            // set the first encountered audio stream as current
+            for (Sptr<MediaStream> stream : list.at(0)->getStreams()){
+                if (stream->getType() == MediaStream::Type::Audio){
+                    audioStream = stream.dynamicCast<AudioStream>();
+                    episode->setCurrentAudioStream(stream);
+                    break;
                 }
             }
         }
 
-        qDebug() << "PLAY SESSION ID:" << jsonData.value("PlaySessionId").toString() << episode->getCurrentAudioStream() << audioStream;
+        QString playSessionId = jsonData.value("PlaySessionId").toString();
         if (audioStream){
             // If an audio stream is present set its PlaySessionId
-            audioStream->setPlaySessionId(jsonData.value("PlaySessionId").toString());
+            audioStream->setPlaySessionId(playSessionId);
         }
 
-        if (playAfterUpdate && list.count()) play(episode);
+        // Prepare m3u8 file url, set episode as current and set player url
+        QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, QString::number(audioStream->getIndex()), playSessionId);
+        setCurrentEpisodeQ(episode.data());
+        QmlLinker::goToPlayer(targetUrl);
     });
 
-    QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), audioStreamIndex);
-    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
-    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
-
-    manager->get(request);
-    setWorking(true);
-}
-
-void Jellyfin::play(Sptr<Episode> episode)
-{
-    if (accessToken.isEmpty()){
-        qDebug() << "[ Play media ] Access Token is empty.";
-        return;
-    }
-
-    QString episodeId = episode->getId();
-    if (episodeId.isEmpty()){
-        qDebug() << "[ Play media ] No episode id.";
-        return;
-    }
-
-    qDebug() << "HERE";
-
-    Sptr<AudioStream> audioStream = episode->getCurrentAudioStream().dynamicCast<AudioStream>();
-
-    QString playSessionId = audioStream ? audioStream->getPlaySessionId() : "";
-    QString audioStreamIndex    = audioStream ? QString::number(audioStream->getIndex()) : "1";
-
-    QString fileName            = QString("%1.%2.m3u8").arg(episode->getId(), audioStreamIndex);
-    QString localFilePath       = QString ("%1/%2/%3").arg("file://", qApp->applicationDirPath(), fileName);
-    QFile file(localFilePath);
-
-    if (file.open(QIODevice::ReadOnly)){
-        setCurrentEpisodeQ(episode.data());
-        QmlLinker::goToPlayer(localFilePath);
-        return;
-    }
-
-    qDebug() << "HERE";
-    QNetworkAccessManager *manager = new QNetworkAccessManager();
-
-    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
-        setWorking(false);
-
-        qDebug() << "HERE";
-        if (reply->error() != QNetworkReply::NoError){
-            qDebug() << "[ Play media ] Request response error." << reply->errorString();
-            reply->manager()->deleteLater();
-            return;
-        }
-
-        // Save m3u8 file
-        QByteArray data = reply->readAll();
-        qDebug() << data;
-
-        qDebug() << "HERE";
-        QString prefix = QString("https://fankai.fr/videos/%1/").arg(episode->getId());
-        data = data.insert(data.indexOf("main.m3u8"), prefix);
-//        data = data.insert(data.indexOf("master.m3u8"), prefix);
-
-        QFile file(fileName);
-        if (!file.open(QIODevice::WriteOnly)){
-            qDebug() << "[ Play media ] Error opening m3u8 cache file.";
-        } else {
-            file.write(data);
-        }
-
-        file.close();
-
-        setCurrentEpisodeQ(episode.data());
-        QmlLinker::goToPlayer(localFilePath);
-    });
-
-    QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, audioStreamIndex, playSessionId);
+    QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), "0");
     QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
     request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
 

@@ -40,7 +40,6 @@ public:
     Q_INVOKABLE void updateSeasons(Sptr<Node> show);
     Q_INVOKABLE void updateEpisodes(Sptr<Node> show, Sptr<Node> season);
 
-    void updatePlaybackInfo(Sptr<Episode> episode, bool playAfterUpdate = false);
     void play(Sptr<Episode> episode);
 
     // SETTERS - GETTERS
@@ -91,11 +90,11 @@ public:
     // Args: Episode id - accessToken - audioStream
     // Args: Item id    - maxHeight   - maxWidth - imageTag
     inline static const QString AccessHeader    = "MediaBrowser Client=\"Jellyfin Web\", Device=\"Web Browser\", DeviceId=\"%1\", Version=\"10.4.3\", Token=\"%2\"";
-    inline static const QString SeriesUrl       = "https://fankai.fr/Users/%1/Items?SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Series&Recursive=true&Fields=PrimaryImageAspectRatio%2CBasicSyncInfo&ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Banner,Thumb&StartIndex=0&Limit=100";
-    inline static const QString SeasonsUrl      = "https://fankai.fr/Shows/%1/Seasons?userId=%2&Fields=ItemCounts,PrimaryImageAspectRatio,BasicSyncInfo,CanDelete,MediaSourceCount";
-    inline static const QString EpisodesUrl     = "https://fankai.fr/Shows/%1/Episodes?seasonId=%2&userId=%3&Fields=ItemCounts,PrimaryImageAspectRatio,BasicSyncInfo,CanDelete,MediaSourceCount,Overview";
+    inline static const QString SeriesUrl       = "https://fankai.fr/Users/%1/Items?IncludeItemTypes=Series&Recursive=true&SortBy=SortName&SortOrder=Ascending";
+    inline static const QString SeasonsUrl      = "https://fankai.fr/Shows/%1/Seasons?userId=%2&Fields=ItemCounts";
+    inline static const QString EpisodesUrl     = "https://fankai.fr/Shows/%1/Episodes?seasonId=%2&userId=%3&SortBy=SortIndexNumber&SortOrder=Ascending&Fields=ItemCounts,MediaSourceCount";
     inline static const QString PlaybackInfoUrl = "https://fankai.fr/Items/%1/PlaybackInfo?UserId=%2&AudioStreamIndex=%3";
-    inline static const QString m3u8FileUrl     = "https://fankai.fr/videos/%1/master.m3u8?&MediaSourceId=%1&api_key=%2&AudioStreamIndex=%3&PlaySessionId=%4";
+    inline static const QString m3u8FileUrl     = "https://fankai.fr/videos/%1/main.m3u8?&MediaSourceId=%1&api_key=%2&AudioStreamIndex=%3&PlaySessionId=%4";
     inline static const QString PrimaryImageUrl = "https://fankai.fr/Items/%1/Images/Primary?maxHeight=%2&maxWidth=%3&tag=%4&quality=90";
 
 private:
@@ -149,14 +148,23 @@ void Jellyfin::updateFromNetworkReply(QNetworkReply *reply, QHash<QString, Sptr<
     // Update episodesHash
     QJsonArray jsonArray = jsonData.value("Items").toArray();
     for (const QJsonValue &jsonValue : jsonArray){
-        Sptr<Node> node = Sptr<T>::create();
-        node->fromJson(jsonValue.toObject());
-        QString id = node->getId();
-        if (!id.isEmpty()){
-            episodesHash.insert(id, node);
-            node->setParentNode(parent);
-            children << node;
+        QString id = jsonValue.toObject().value("Id").toString();
+        Sptr<Node> node = targetHash.value(id);
+
+        // If the node exists in the target hash then update it
+        // Else create it and set its parent node and insert it in hash
+        if (node) {
+            node->fromJson(jsonValue.toObject());
+        } else {
+            node = Sptr<T>::create();
+            node->fromJson(jsonValue.toObject());
+            if (!id.isEmpty()){
+                targetHash.insert(id, node);
+                node->setParentNode(parent);
+            }
         }
+
+        children << node;
     }
 
     parent->setChildrenNodes(children);
