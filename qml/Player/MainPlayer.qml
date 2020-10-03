@@ -29,7 +29,7 @@ Rectangle {
 
     BusyIndicator {
         anchors.centerIn: parent
-        running: mediaPlayer.state === Vlc.Buffering || mediaPlayer.state === Vlc.Opening
+        running: ![Vlc.Playing, Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) || mediaPlayer.time <= 0
         width: 150
         height: 150
         palette.dark: "white"
