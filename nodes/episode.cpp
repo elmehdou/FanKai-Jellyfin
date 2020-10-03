@@ -19,27 +19,9 @@ void Episode::fromJson(const QJsonObject &jsonData)
     setRunTimeTicks(jsonData.value("RunTimeTicks").toVariant().toLongLong());
 }
 
-void Episode::updateChildren()
-{
-    // No children
-}
-
-void Episode::updatePlaybackInfo()
-{
-    Jellyfin::getInstance()->updatePlaybackInfo(sharedFromThis().dynamicCast<Episode>());
-}
-
 void Episode::play()
 {
-    qDebug() << "Playing";
-    if (currentAudioStream.dynamicCast<AudioStream>()){
-        if (!currentAudioStream.dynamicCast<AudioStream>()->getPlaySessionId().isEmpty()){
-            Jellyfin::getInstance()->play(sharedFromThis().dynamicCast<Episode>());
-        }
-    }
-
-    Jellyfin::getInstance()->updatePlaybackInfo(sharedFromThis().dynamicCast<Episode>(), true);
-
+    Jellyfin::getInstance()->play(sharedFromThis().dynamicCast<Episode>());
 }
 
 qint64 Episode::getRunTimeTicks() const

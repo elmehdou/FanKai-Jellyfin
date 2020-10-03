@@ -21,6 +21,10 @@ public:
 
     void fromJson(const QJsonObject &jsonData) override;
 
+    // INVOKABLES
+    Q_INVOKABLE void play();
+
+    // SETTERS - GETTERS
     qint64 getRunTimeTicks() const;
     void setRunTimeTicks(const qint64 &value);
 
@@ -29,13 +33,6 @@ public:
     QList<QObject *> getMediaSourcesQ() const;
     QList<Sptr<MediaSource> > getMediaSources() const;
     void setMediaSources(const QList<Sptr<MediaSource> > &value);
-
-    // INVOKABLES
-    Q_INVOKABLE void updateChildren() override;
-
-    Q_INVOKABLE void updatePlaybackInfo();
-
-    Q_INVOKABLE void play();
 
     MediaStream *getCurrentAudioStreamQ() const;
     Sptr<MediaStream> getCurrentAudioStream() const;
