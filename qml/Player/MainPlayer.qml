@@ -16,9 +16,10 @@ Rectangle {
     VlcPlayer {
         id: mediaPlayer
         logLevel: Vlc.ErrorLevel
-        onPositionChanged: {
-            var pos = mediaPlayer.position;
-            seekSlider.value = pos;
+        onTimeChanged: {
+            if (Math.abs(seekSlider.value - mediaPlayer.time) > 1000){
+                seekSlider.value = mediaPlayer.time;
+            }
         }
     }
 
@@ -73,17 +74,13 @@ Rectangle {
             live: false
             Layout.margins: 10
             Layout.fillWidth: true
-            to: 1
-//            value: mediaPlayer.position
+            to: mediaPlayer.length
             onValueChanged: {
+                var newTime = seekSlider.value; // Multithreading is a bitch
                 if (pressed) {
-                    var newValue = value;
-                    mediaPlayer.pause();
-                    mediaPlayer.position = newValue;
-                    mediaPlayer.play();
+                    mediaPlayer.time = newTime;
                 }
             }
-
         }
 
         Text{
@@ -95,7 +92,7 @@ Rectangle {
                 return hours + ":" + mins % 60 + ":" + secs %60;
             }
 
-            text: formatTime(mediaPlayer.time)
+            text: formatTime(seekSlider.value) + "/" + formatTime(mediaPlayer.length)
             color: "white"
             opacity: 0.5
         }
@@ -129,7 +126,7 @@ Rectangle {
                             y: 1
                             width: cSMenuItem.width - 2
                             height: cSMenuItem.height - 2
-                            color: Jellyfin.currentEpisode.currentSubtitleStream === model.modelData ? "#aaaaff" : cSMenuItem.down ? cSMenuItem.palette.midlight : cSMenuItem.highlighted ? cSMenuItem.palette.light : "transparent"
+                            color: Jellyfin.currentEpisode.currentSubtitleStream === model.modelData ? "#aaaaff" : cSMenuItem.down ? "#8888ff" : cSMenuItem.highlighted ? "#ddddff" : "transparent"
                         }
                     }
                 }
@@ -165,7 +162,7 @@ Rectangle {
                             y: 1
                             width: cLMenuItem.width - 2
                             height: cLMenuItem.height - 2
-                            color: Jellyfin.currentEpisode.currentAudioStream === model.modelData ? "#aaaaff" : cLMenuItem.down ? cLMenuItem.palette.midlight : cLMenuItem.highlighted ? cLMenuItem.palette.light : "transparent"
+                            color: Jellyfin.currentEpisode.currentAudioStream === model.modelData ? "#aaaaff" : cLMenuItem.down ? "#8888ff" : cLMenuItem.highlighted ? "#ddddff" : "transparent"
                         }
                     }
                 }
