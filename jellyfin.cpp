@@ -7,7 +7,6 @@
 #include <QNetworkReply>
 #include <QJsonArray>
 #include <QDebug>
-#include <QFile>
 
 #include <nodes/season.h>
 #include <nodes/series.h>

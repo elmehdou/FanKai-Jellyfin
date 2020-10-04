@@ -71,9 +71,6 @@ public:
 
 
 private:
-    QString getShowsUrl();
-    QString getSeasonsUrl(Sptr<Node> series);
-    QString getEpisodeUrl(Sptr<Node> series, Sptr<Node> season);
 
     template<typename T>
     void updateFromNetworkReply(QNetworkReply *reply, QHash<QString,Sptr<Node>> &targetHash, Sptr<Node> parent);
