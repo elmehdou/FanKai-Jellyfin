@@ -12,22 +12,22 @@ Window {
     visible: true
     width: 1024
     height: 680
-    title: qsTr("Fan Kai Jellyfin 1.0")
-
-//    property string playerUrl: ""
+    title: qsTr("Fan Kai Jellyfin v0.2-alpha")
 
     function moveToPage(page){ rootLoader.setSource(page) }
 
     function goToPlayer(playerUrl){
+        // Change page to lister/player and show player
         if (String(rootLoader.source) !== "qrc:/qml/Pages/MainPage.qml"){
             rootLoader.setSource("qrc:/qml/Pages/MainPage.qml", {showPlayer: true});
         } else {
             rootLoader.item.showPlayer = true;
             rootLoader.item.mediaPlayer.play();
         }
-        if (String(rootLoader.item.mediaPlayer.playerUrl) !== playerUrl){
+
+        // update player url if needed
+        if (String(rootLoader.item.mediaPlayer.url) !== playerUrl){
             rootLoader.item.mediaPlayer.url = playerUrl;
-//            rootLoader.item.mediaPlayer.time = Jellyfin.currentEpisode.positionTicks;
         }
     }
 
@@ -60,9 +60,6 @@ Window {
 
         Loader {
             id: rootLoader
-//            y: rootHeader.height
-//            width: parent.width
-//            height: 300
             Layout.fillWidth: true
             Layout.fillHeight: true
             source: "qrc:/qml/Pages/LoginPage.qml"
