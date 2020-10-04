@@ -84,7 +84,8 @@ public:
     // Args: Series id  - User id
     // Args: Series id  - Season id   - User id
     // Args: Episode id - User id     - audioStream
-    // Args: Episode id - accessToken - audioStream
+    // Args: Episode id - accessToken - audioStream - playSessionId
+    // Args: Episode id - accessToken
     // Args: Item id    - maxHeight   - maxWidth - imageTag
     inline static const QString AccessHeader    = "MediaBrowser Client=\"Jellyfin Web\", Device=\"Web Browser\", DeviceId=\"%1\", Version=\"10.4.3\", Token=\"%2\"";
     inline static const QString SeriesUrl       = "https://fankai.fr/Users/%1/Items?IncludeItemTypes=Series&Recursive=true&SortBy=SortName&SortOrder=Ascending";
@@ -92,6 +93,7 @@ public:
     inline static const QString EpisodesUrl     = "https://fankai.fr/Shows/%1/Episodes?seasonId=%2&userId=%3&SortBy=SortIndexNumber&SortOrder=Ascending&Fields=ItemCounts,MediaSourceCount";
     inline static const QString PlaybackInfoUrl = "https://fankai.fr/Items/%1/PlaybackInfo?UserId=%2&AudioStreamIndex=%3";
     inline static const QString m3u8FileUrl     = "https://fankai.fr/videos/%1/main.m3u8?&MediaSourceId=%1&api_key=%2&AudioStreamIndex=%3&PlaySessionId=%4";
+    inline static const QString webmFileUrl     = "https://fankai.fr/Videos/%1/stream.webm?Static=true&mediaSourceId=%1&api_key=%2";
     inline static const QString PrimaryImageUrl = "https://fankai.fr/Items/%1/Images/Primary?maxHeight=%2&maxWidth=%3&tag=%4&quality=90";
 
 private:

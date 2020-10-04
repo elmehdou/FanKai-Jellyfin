@@ -188,94 +188,11 @@ void Jellyfin::play(Sptr<Episode> episode)
         return;
     }
 
-    // M3u8 file is returned according to a playSessionId
-    // which in turn is defined by the audio stream index in the PlaybackInfoUrl
-
-    Sptr<AudioStream> currentAudioStream = episode->getCurrentAudioStream().dynamicCast<AudioStream>();
-    if (currentAudioStream){
-        // Get the audio stream index in case it has already been selected
-        // Get playsessionId if any for the current audio stream
-        QString audioStreamIndex = QString::number(currentAudioStream->getIndex());
-        QString playSessionId = currentAudioStream->getPlaySessionId();
-
-        if (!playSessionId.isEmpty()){
-            // Prepare m3u8 file url, set episode as current and set player url
-            QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, audioStreamIndex, playSessionId);
-            setCurrentEpisodeQ(episode.data());
-            QmlLinker::goToPlayer(targetUrl);
-            QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
-                                               QString("Lancement du film: %1\nAudio: %2").arg(episode->getName(), currentAudioStream->getDisplayTitle()));
-            return;
-        }
-    }
-
-    // If no currentAudioStream then the episode has not been loaded yet
-    QNetworkAccessManager *manager = new QNetworkAccessManager();
-    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
-        setWorking(false);
-
-        // Simple error checking
-        if (reply->error() != QNetworkReply::NoError){
-            qDebug() << "[ Data update ] Request response error." << reply->errorString();
-            reply->manager()->deleteLater();
-            return;
-        }
-
-        QJsonObject jsonData = QJsonDocument::fromJson(reply->readAll()).object();
-        if (jsonData.isEmpty()){
-            qDebug() << "[ Data update ] Json Parsing Error.";
-            reply->manager()->deleteLater();
-            return;
-        }
-
-        // Get current audio stream since the playSessionId might be the missing info
-        Sptr<AudioStream> audioStream = episode->getCurrentAudioStream().dynamicCast<AudioStream>();
-
-        // Check if the mediaSource list is populated
-        QList<Sptr<MediaSource>> list = episode->getMediaSources();
-        if (!list.count()){
-
-            // First time requesting episode
-            // Populate Media sources and streams
-            QJsonArray jsonArray = jsonData.value("MediaSources").toArray();
-            for (const QJsonValue &value : jsonArray){
-                QJsonObject sourceJson = value.toObject();
-                Sptr<MediaSource> source = Sptr<MediaSource>::create();
-                source->fromJson(sourceJson);
-                list << source;
-            }
-            episode->setMediaSources(list);
-
-            // set the first encountered audio stream as current
-            for (Sptr<MediaStream> stream : list.at(0)->getStreams()){
-                if (stream->getType() == MediaStream::Type::Audio){
-                    audioStream = stream.dynamicCast<AudioStream>();
-                    episode->setCurrentAudioStream(stream);
-                    break;
-                }
-            }
-        }
-
-        QString playSessionId = jsonData.value("PlaySessionId").toString();
-        if (audioStream){
-            // If an audio stream is present set its PlaySessionId
-            audioStream->setPlaySessionId(playSessionId);
-        }
-
-        // Prepare m3u8 file url, set episode as current and set player url
-        QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, QString::number(audioStream->getIndex()), playSessionId);
-        setCurrentEpisodeQ(episode.data());
-        QmlLinker::goToPlayer(targetUrl);
-        QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
-                                           QString("Lancement du film: %1\nAudio: %2").arg(episode->getName(), audioStream->getDisplayTitle()));
-    });
-
-    QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), "0");
-    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
-    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
-
-    manager->get(request);
-    setWorking(true);
+    QString targetUrl = Jellyfin::webmFileUrl.arg(episodeId, accessToken);
+    setCurrentEpisodeQ(episode.data());
+    QmlLinker::goToPlayer(targetUrl);
+    QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
+                                       QString("Lancement du film: %1").arg(episode->getName()));
 }
 
 // SETTERS GETTERS
