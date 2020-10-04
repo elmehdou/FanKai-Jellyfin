@@ -18,5 +18,8 @@
         <file>qml/Modals/ClosableModal.qml</file>
         <file>qml/CustomComponents/CloseButton.qml</file>
         <file>qml/CustomComponents/VLayoutSpacer.qml</file>
+        <file>qml/Delegates/GridDelegate.qml</file>
+        <file>qml/Listers/GridLister.qml</file>
+        <file>qml/CustomComponents/SoftButton.qml</file>
     </qresource>
 </RCC>

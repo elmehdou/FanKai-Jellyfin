@@ -7,7 +7,7 @@ import Node 1.0
 
 import "qrc:/qml/Delegates"
 
-ListView {
+GridView {
 
     function modelList(){
         if (!Jellyfin.currentNode) return [];
@@ -27,7 +27,8 @@ ListView {
 
     id: rootList
     clip: true
-    spacing: 0
+    cellWidth: 250
+    cellHeight: 400
     width: 0.75 * parent.width
     height: parent.height
     anchors.horizontalCenter: parent.horizontalCenter
@@ -36,7 +37,7 @@ ListView {
 
     header: ListHeaderDelegate {}
 
-    delegate: ListDelegate {}
+    delegate: GridDelegate {}
 
     populate: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 1000 }

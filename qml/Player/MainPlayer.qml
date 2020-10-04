@@ -107,26 +107,24 @@ Rectangle {
 
             Menu {
                 id: contextSubtitleMenu
-
+                width: 300
                 Repeater {
-                    model: Jellyfin.currentEpisode ? Jellyfin.currentEpisode.mediaSource ? Jellyfin.currentEpisode.mediaSource.subtitleStreams : undefined : undefined
+                    model: mediaPlayer.subtitleTrackModel
                     delegate: MenuItem{
                         id: cSMenuItem
-                        text: "Subtitle - " + model.modelData.title;
+                        text: "Subtitle - " + model.title;
                         onClicked: {
-                            Jellyfin.currentEpisode.currentSubtitleStream = model.modelData;
-                            Jellyfin.currentEpisode.play();
-                            root.goToPlayer(mediaplayer.url);
+                            mediaPlayer.subtitleTrack = model.id
                         }
 
                         background: Rectangle {
-                            implicitWidth: 200
+                            implicitWidth: 300
                             implicitHeight: 40
                             x: 1
                             y: 1
                             width: cSMenuItem.width - 2
                             height: cSMenuItem.height - 2
-                            color: Jellyfin.currentEpisode.currentSubtitleStream === model.modelData ? "#aaaaff" : cSMenuItem.down ? "#8888ff" : cSMenuItem.highlighted ? "#ddddff" : "transparent"
+                            color: mediaPlayer.subtitleTrack === model.id ? "#aaaaff" : cSMenuItem.down ? "#8888ff" : cSMenuItem.highlighted ? "#ddddff" : "transparent"
                         }
                     }
                 }
@@ -144,25 +142,23 @@ Rectangle {
 
             Menu {
                 id: contextLanguageMenu
-
+                width: 300
                 Repeater {
-                    model: Jellyfin.currentEpisode ? Jellyfin.currentEpisode.mediaSource ? Jellyfin.currentEpisode.mediaSource.audioStreams : undefined : undefined
+                    model: mediaPlayer.audioTrackModel
                     delegate: MenuItem{
                         id: cLMenuItem
-                        text: "Audio - " + model.modelData.displayTitle;
+                        text: "Audio - " + model.title;
                         onClicked: {
-                            Jellyfin.currentEpisode.currentAudioStream = model.modelData;
-                            Jellyfin.currentEpisode.play();
-                            root.goToPlayer(mediaplayer.url);
+                            mediaPlayer.audioTrack = model.id
                         }
                         background: Rectangle {
-                            implicitWidth: 200
+                            implicitWidth: 300
                             implicitHeight: 40
                             x: 1
                             y: 1
                             width: cLMenuItem.width - 2
                             height: cLMenuItem.height - 2
-                            color: Jellyfin.currentEpisode.currentAudioStream === model.modelData ? "#aaaaff" : cLMenuItem.down ? "#8888ff" : cLMenuItem.highlighted ? "#ddddff" : "transparent"
+                            color: mediaPlayer.audioTrack === model.id ? "#aaaaff" : cLMenuItem.down ? "#8888ff" : cLMenuItem.highlighted ? "#ddddff" : "transparent"
                         }
                     }
                 }

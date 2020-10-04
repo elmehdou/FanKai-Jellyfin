@@ -10,6 +10,8 @@ Rectangle {
 
     height: 80
 
+    property int  viewType: 0
+
 
     gradient: Gradient {
         GradientStop { position: 0; color: "#000030" }
@@ -19,7 +21,7 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-
+        spacing: 0
         Image {
             height: 80
             source: "qrc:/images/logo.png"
@@ -46,6 +48,28 @@ Rectangle {
             running: Jellyfin.working
             palette.dark: "white"
             opacity: 0.75
+        }
+
+        VLayoutSeparator{}
+
+        SoftButton {
+            Layout.fillHeight: true
+            icon.source: "qrc:/images/list.svg"
+            icon.color: "white"
+            enabled: viewType !== 0
+            display: AbstractButton.IconOnly
+            onClicked: viewType = 0
+        }
+
+        VLayoutSeparator{}
+
+        SoftButton {
+            Layout.fillHeight: true
+            icon.source: "qrc:/images/grid.svg"
+            icon.color: "white"
+            enabled: viewType !== 1
+            display: AbstractButton.IconOnly
+            onClicked: viewType = 1
         }
     }
 }

@@ -46,8 +46,8 @@ Window {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: "#101030" }
-            GradientStop { position: 1; color: "#303050" }
+            GradientStop { position: 0; color: "#050515" }
+            GradientStop { position: 1; color: "#202030" }
         }
     }
 

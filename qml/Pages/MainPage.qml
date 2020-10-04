@@ -11,14 +11,19 @@ import "qrc:/qml/Player"
 Page{
     id: mainPageStack
 
-    property bool  showPlayer: false
+    property int viewType: rootHeader.viewType
+    property bool showPlayer: false
 
     readonly property alias mediaPlayer: mainPlayer.mediaplayer
 
     anchors.fill: parent
     background: Item {}
 
-    VerticalLister { anchors.fill: parent; visible: !showPlayer }
+    Loader {
+        anchors.fill: parent;
+        visible: !showPlayer
+        source: viewType === 1 ? "qrc:/qml/Listers/GridLister.qml" : "qrc:/qml/Listers/VerticalLister.qml"
+    }
 
     MainPlayer { id: mainPlayer; anchors.fill: parent; visible: showPlayer }
 }

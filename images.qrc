@@ -8,5 +8,7 @@
         <file>images/play.svg</file>
         <file>images/stop.svg</file>
         <file>images/logo.png</file>
+        <file>images/grid.svg</file>
+        <file>images/list.svg</file>
     </qresource>
 </RCC>
