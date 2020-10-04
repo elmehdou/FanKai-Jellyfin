@@ -20,7 +20,12 @@ public:
     static QObject *getRootObject();
 
     static void moveToPage(const QString &page);
+
     static void goToPlayer(const QString &playerUrl);
+
+    static void createMessageModal(const QString &title, const QString &body);
+
+    static void createNotificationModal(const QString &title, const QString &body);
 
 public:
 

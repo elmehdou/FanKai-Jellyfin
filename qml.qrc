@@ -12,5 +12,11 @@
         <file>qml/Modals/LoginModal.qml</file>
         <file>qml/Pages/LoginPage.qml</file>
         <file>qml/Pages/MainPage.qml</file>
+        <file>qml/ComponentCreator.js</file>
+        <file>qml/Modals/MessageModal.qml</file>
+        <file>qml/Modals/NotificationModal.qml</file>
+        <file>qml/Modals/ClosableModal.qml</file>
+        <file>qml/CustomComponents/CloseButton.qml</file>
+        <file>qml/CustomComponents/VLayoutSpacer.qml</file>
     </qresource>
 </RCC>

@@ -5,7 +5,7 @@ import QtQuick.Controls 2.12
 
 import Jellyfin 1.0
 
-import "qrc:/qml"
+import "qrc:/qml/ComponentCreator.js" as ComponentCreator
 
 Window {
     id: root
@@ -39,6 +39,10 @@ Window {
         }
     }
 
+    function createMessageModal(title, body) { ComponentCreator.createMessageModal(root, title, body); }
+
+    function createNotificationModal(title, body) { ComponentCreator.createNotificationModal(notificationLayout, title, body); }
+
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
@@ -64,6 +68,16 @@ Window {
             Layout.fillHeight: true
             source: "qrc:/qml/Pages/LoginPage.qml"
         }
+    }
+
+    ColumnLayout {
+        id: notificationLayout
+        z: 1000
+        spacing: 10
+        anchors.margins: 10
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        layoutDirection: Qt.RightToLeft
     }
 
 }

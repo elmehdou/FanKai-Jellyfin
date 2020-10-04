@@ -42,6 +42,7 @@ void Jellyfin::login(const QString &username, const QString &password, bool reme
 
         if (reply->error() != QNetworkReply::NoError){
             qDebug() << "[ Login ] Authentication Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
             manager->deleteLater();
             return;
         }
@@ -49,6 +50,7 @@ void Jellyfin::login(const QString &username, const QString &password, bool reme
         QJsonObject jsonData = QJsonDocument::fromJson(responseData).object();
         if (jsonData.isEmpty()){
             qDebug() << "[ Login ] Json Parsing Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
             manager->deleteLater();
             return;
         }
@@ -62,6 +64,8 @@ void Jellyfin::login(const QString &username, const QString &password, bool reme
         // Update User
         user->fromJson(jsonData.value("User").toObject());
         user->setState(User::State::Connected);
+
+        QmlLinker::createNotificationModal("Connexion réussie", QString("Bienvenue %1 sur la version bureau de FanKai Jellyfin !").arg(user->getUsername()));
 
         // Request show update
         updateSeries();
@@ -199,6 +203,8 @@ void Jellyfin::play(Sptr<Episode> episode)
             QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, audioStreamIndex, playSessionId);
             setCurrentEpisodeQ(episode.data());
             QmlLinker::goToPlayer(targetUrl);
+            QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
+                                               QString("Lancement du film: %1\nAudio: %2").arg(episode->getName(), currentAudioStream->getDisplayTitle()));
             return;
         }
     }
@@ -260,6 +266,8 @@ void Jellyfin::play(Sptr<Episode> episode)
         QString targetUrl = Jellyfin::m3u8FileUrl.arg(episodeId, accessToken, QString::number(audioStream->getIndex()), playSessionId);
         setCurrentEpisodeQ(episode.data());
         QmlLinker::goToPlayer(targetUrl);
+        QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
+                                           QString("Lancement du film: %1\nAudio: %2").arg(episode->getName(), audioStream->getDisplayTitle()));
     });
 
     QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), "0");
