@@ -11,7 +11,6 @@ import "qrc:/qml/Player"
 Page{
     id: mainPageStack
 
-    property string playerUrl: ""
     property bool  showPlayer: false
 
     readonly property alias mediaPlayer: mainPlayer.mediaplayer
