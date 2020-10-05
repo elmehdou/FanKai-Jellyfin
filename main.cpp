@@ -11,6 +11,7 @@
 void startInitialization(){
 
     qmlRegisterSingletonInstance<Jellyfin>("Jellyfin", 1, 0, "Jellyfin", Jellyfin::getInstance());
+    qmlRegisterSingletonInstance<QmlLinker>("QmlState", 1, 0, "QmlState", QmlLinker::getInstance());
 
     qmlRegisterUncreatableType<Node>("Node", 1, 0, "Node", "Nodes cannot be created");
 }
