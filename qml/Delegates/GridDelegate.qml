@@ -9,7 +9,6 @@ import "qrc:/qml/CustomComponents"
 
 Item {
 
-    width: 220
     height: 400
     ColumnLayout {
         anchors.fill: parent
@@ -19,6 +18,7 @@ Item {
             Layout.margins: 1
             Layout.preferredWidth: 219
             Layout.preferredHeight: 329
+            Layout.alignment: Qt.AlignHCenter
 
             border.width: 1
             border.color: "#505050"
@@ -44,6 +44,7 @@ Item {
             text: modelData.name
             Layout.preferredWidth: 219
             wrapMode: Text.Wrap
+            Layout.alignment: Qt.AlignHCenter
             horizontalAlignment: Text.AlignHCenter
         }
 

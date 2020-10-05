@@ -4,18 +4,17 @@ import QtQuick.Layouts 1.12
 
 import VLCQt 1.1
 import Jellyfin 1.0
+import QmlState 1.0
 
 import "qrc:/qml/CustomComponents"
 
 Rectangle {
-    readonly property alias mediaplayer: mediaPlayer
-
     color: "black"
     anchors.fill: parent
 
     VlcPlayer {
         id: mediaPlayer
-        logLevel: Vlc.ErrorLevel
+//        logLevel: Vlc.ErrorLevel
         onTimeChanged: {
             if (Math.abs(seekSlider.value - mediaPlayer.time) > 1000){
                 seekSlider.value = mediaPlayer.time;
@@ -29,12 +28,29 @@ Rectangle {
     }
 
     BusyIndicator {
+        id: bufferingIndicator
         anchors.centerIn: parent
-        running: ![Vlc.Playing, Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) || mediaPlayer.time <= 0
+        running: false
         width: 150
         height: 150
         palette.dark: "white"
         opacity: 0.75
+
+        Timer {
+            property int lastTime: 0
+            repeat: true
+            running: mediaPlayer.url.length && ![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) ? true : false
+            interval: 1000
+            onTriggered: {
+                if (![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) && mediaPlayer.time === lastTime){
+                    bufferingIndicator.running = true;
+                } else {
+                    bufferingIndicator.running = false;
+                }
+
+                lastTime = mediaPlayer.time;
+            }
+        }
     }
 
     PlayerButton {
@@ -164,5 +180,18 @@ Rectangle {
                 }
             }
         }
+
+        PlayerButton {
+            id: fullscreenButton
+            Layout.margins: 10
+            source: "qrc:/images/fullscreen.svg"
+            onClicked: function(){ QmlState.playerFullscreen = !QmlState.playerFullscreen }
+        }
+    }
+
+
+
+    Component.onCompleted: {
+        Qt.mediaPlayer = mediaPlayer;
     }
 }

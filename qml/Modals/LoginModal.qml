@@ -57,7 +57,7 @@ Rectangle {
         }
 
         Button {
-            text: "Login"
+            text: "Log in"
             Layout.fillWidth: true
             Layout.margins: 10
             onClicked: Jellyfin.login(usernameField.text, passwordField.text , false)

@@ -25,7 +25,7 @@ Button {
         id: bgRect
         implicitWidth: 40
         implicitHeight: control.height
-        opacity: control.hovered ? control.down ? 0.9 : 0.6 : 0.0
+        opacity: control.hovered ? control.down ? 0.7 : 0.5 : 0.0
         gradient: Gradient {
             GradientStop { position: 0.0; color: "#505050" }
             GradientStop { position: 1.0; color: "#303030" }

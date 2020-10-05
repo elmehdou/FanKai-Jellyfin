@@ -11,18 +11,32 @@ ListView {
 
     function modelList(){
         if (!Jellyfin.currentNode) return [];
-        return Jellyfin.currentNode.childrenNodes.sort((a,b) => {
-                                                           if (a.hasOwnProperty("indexNumber")){
-                                                               return a.indexNumber - b.indexNumber;
-                                                           } else {
-                                                               var fa = a.name.toLowerCase();
-                                                               var fb = b.name.toLowerCase();
+        var nodes = Jellyfin.currentNode.childrenNodes;
 
-                                                               if (fa < fb) { return -1; }
-                                                               if (fa > fb) { return 1; }
-                                                               return 0;
-                                                           }
-                                                       });
+        if (parent.hasOwnProperty("keyword")){
+            var keyword = parent.keyword
+            if (keyword.length > 3) {
+                nodes = nodes.filter( node => {
+                                         if (!node.name) { return false }
+                                         else if (node.name.toLower().contains(keyword.toLower())) { return true; }
+                                     })
+            }
+        }
+
+
+        nodes = nodes.sort((a,b) => {
+                                       if (a.hasOwnProperty("indexNumber")){
+                                           return a.indexNumber - b.indexNumber;
+                                       } else {
+                                           var fa = a.name.toLowerCase();
+                                           var fb = b.name.toLowerCase();
+
+                                           if (fa < fb) { return -1; }
+                                           if (fa > fb) { return 1; }
+                                           return 0;
+                                       }
+                                   });
+        return nodes;
     }
 
     id: rootList
