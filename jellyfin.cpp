@@ -189,7 +189,14 @@ void Jellyfin::play(Sptr<Episode> episode)
     }
 
     QString targetUrl = Jellyfin::webmFileUrl.arg(episodeId, accessToken);
+
+    Sptr<Node> season = episode->getParentNode();
+    Sptr<Node> series = season->getParentNode();
+
+    setCurrentSeriesQ(series.data());
+    setCurrentSeasonQ(season.data());
     setCurrentEpisodeQ(episode.data());
+
     QmlLinker::goToPlayer(targetUrl);
     QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
                                        QString("Lancement du film: %1").arg(episode->getName()));
