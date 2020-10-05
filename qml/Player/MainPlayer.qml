@@ -39,10 +39,12 @@ Rectangle {
         Timer {
             property int lastTime: 0
             repeat: true
-            running: mediaPlayer.url.length && ![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) ? true : false
+            running: true
             interval: 1000
             onTriggered: {
-                if (![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) && mediaPlayer.time === lastTime){
+                if (    mediaPlayer.url &&
+                        ![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) &&
+                        mediaPlayer.time === lastTime){
                     bufferingIndicator.running = true;
                 } else {
                     bufferingIndicator.running = false;
