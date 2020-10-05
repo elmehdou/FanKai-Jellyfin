@@ -13,7 +13,7 @@ ApplicationWindow {
     visible: true
     width: 1024
     height: 680
-    title: qsTr("Fan Kai Jellyfin v0.2-alpha")
+    title: qsTr("Fan Kai Jellyfin v0.5.1-alpha")
     visibility: QmlState.playerFullscreen ? "FullScreen" : "Windowed"
 
     function moveToPage(page){ rootLoader.setSource(page) }
