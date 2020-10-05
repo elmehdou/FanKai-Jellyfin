@@ -57,6 +57,14 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
+        onClicked: {
+            playButton.onClicked();
+        }
+
+        onDoubleClicked: {
+            QmlState.playerFullscreen = !QmlState.playerFullscreen;
+        }
+
         onPositionChanged: {
             playerGuiContainer.opacity = 1;
             playerGuiTimer.restart();
