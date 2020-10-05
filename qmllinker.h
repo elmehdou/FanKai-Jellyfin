@@ -8,6 +8,11 @@
 class QmlLinker : public QObject
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool playerShow READ getPlayerShow WRITE setPlayerShow NOTIFY playerShowChanged)
+    Q_PROPERTY(bool playerFullscreen READ getPlayerFullscreen WRITE setPlayerFullscreen NOTIFY playerFullscreenChanged)
+    Q_PROPERTY(ViewType viewType READ getViewType WRITE setViewType NOTIFY viewTypeChanged)
+
 private:
     explicit QmlLinker(QQmlApplicationEngine *engine);
 
@@ -16,6 +21,12 @@ public:
         if (!instance && engine) instance = new QmlLinker(engine);
         return instance;
     }
+
+    enum class ViewType {
+        ListView,
+        GridView,
+    };
+    Q_ENUM(ViewType)
 
     static QObject *getRootObject();
 
@@ -32,12 +43,29 @@ public:
     inline static const QString LoginPage   = "qrc:/qml/Pages/LoginPage.qml";
     inline static const QString MainPage    = "qrc:/qml/Pages/MainPage.qml";
 
+    bool getPlayerShow() const;
+    void setPlayerShow(bool value);
+
+    bool getPlayerFullscreen() const;
+    void setPlayerFullscreen(bool value);
+
+    ViewType getViewType() const;
+    void setViewType(const ViewType &value);
+
 private:
     inline static QmlLinker *instance = nullptr;
     inline static QQmlApplicationEngine *engine = nullptr;
 
+    bool playerShow;
+    bool playerFullscreen;
+    ViewType viewType;
+
 signals:
+    void playerShowChanged();
+    void playerFullscreenChanged();
+    void viewTypeChanged();
 
 };
 
+Q_DECLARE_METATYPE(QmlLinker::ViewType)
 #endif // QMLLINKER_H

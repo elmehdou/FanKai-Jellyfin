@@ -2,7 +2,10 @@
 
 #include <QDebug>
 
-QmlLinker::QmlLinker(QQmlApplicationEngine *engine)
+QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
+  , playerShow(false)
+  , playerFullscreen(false)
+  , viewType(ViewType::ListView)
 {
     QmlLinker::engine = engine;
 }
@@ -64,4 +67,37 @@ void QmlLinker::createNotificationModal(const QString &title, const QString &bod
                               "createNotificationModal",
                               Q_ARG(QVariant, title),
                               Q_ARG(QVariant, body));
+}
+
+bool QmlLinker::getPlayerShow() const
+{
+    return playerShow;
+}
+
+void QmlLinker::setPlayerShow(bool value)
+{
+    playerShow = value;
+    emit playerShowChanged();
+}
+
+bool QmlLinker::getPlayerFullscreen() const
+{
+    return playerFullscreen;
+}
+
+void QmlLinker::setPlayerFullscreen(bool value)
+{
+    playerFullscreen = value;
+    emit playerFullscreenChanged();
+}
+
+QmlLinker::ViewType QmlLinker::getViewType() const
+{
+    return viewType;
+}
+
+void QmlLinker::setViewType(const ViewType &value)
+{
+    viewType = value;
+    emit viewTypeChanged();
 }

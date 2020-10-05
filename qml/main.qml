@@ -4,39 +4,43 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
 
 import Jellyfin 1.0
+import QmlState 1.0
 
 import "qrc:/qml/ComponentCreator.js" as ComponentCreator
 
-Window {
+ApplicationWindow {
     id: root
     visible: true
     width: 1024
     height: 680
     title: qsTr("Fan Kai Jellyfin v0.2-alpha")
+    visibility: QmlState.playerFullscreen ? "FullScreen" : "Windowed"
 
     function moveToPage(page){ rootLoader.setSource(page) }
 
     function goToPlayer(playerUrl){
         // Change page to lister/player and show player
         if (String(rootLoader.source) !== "qrc:/qml/Pages/MainPage.qml"){
-            rootLoader.setSource("qrc:/qml/Pages/MainPage.qml", {showPlayer: true});
+            rootLoader.setSource("qrc:/qml/Pages/MainPage.qml");
         } else {
-            rootLoader.item.showPlayer = true;
-            rootLoader.item.mediaPlayer.play();
+            Qt.mediaPlayer.play();
         }
+        QmlState.playerShow = true;
 
         // update player url if needed
-        if (String(rootLoader.item.mediaPlayer.url) !== playerUrl){
-            rootLoader.item.mediaPlayer.url = playerUrl;
+        if (String(Qt.mediaPlayer.url) !== playerUrl){
+            Qt.mediaPlayer.url = playerUrl;
         }
     }
 
     function goToList(){
         if (String(rootLoader.source) !== "qrc:/qml/Pages/MainPage.qml"){
-            rootLoader.setSource("qrc:/qml/Pages/MainPage.qml", {showPlayer: false});
+            rootLoader.setSource("qrc:/qml/Pages/MainPage.qml");
         } else {
-            rootLoader.item.showPlayer = false;
+            Qt.mediaPlayer.pause();
         }
+        QmlState.playerShow = false;
+        QmlState.playerFullscreen = false;
     }
 
     function createMessageModal(title, body) { ComponentCreator.createMessageModal(root, title, body); }
@@ -78,6 +82,11 @@ Window {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         layoutDirection: Qt.RightToLeft
+    }
+
+    Component.onCompleted: {
+        Qt.rootWindow = root;
+        Qt.rootHeader = rootHeader;
     }
 
 }

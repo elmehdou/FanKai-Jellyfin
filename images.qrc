@@ -10,5 +10,6 @@
         <file>images/logo.png</file>
         <file>images/grid.svg</file>
         <file>images/list.svg</file>
+        <file>images/fullscreen.svg</file>
     </qresource>
 </RCC>
