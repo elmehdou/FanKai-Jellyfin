@@ -6,6 +6,7 @@ QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
   , playerShow(false)
   , playerFullscreen(false)
   , viewType(ViewType::ListView)
+  , volume(50)
 {
     QmlLinker::engine = engine;
 }
