@@ -25,7 +25,9 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     QmlLinker::getInstance(&engine);
 
-    VlcCommon::setPluginPath(qApp->applicationDirPath() + "/plugins");
+    if (!VlcCommon::setPluginPath("C:/Program Files/VideoLAN/VLC/plugins"))
+        VlcCommon::setPluginPath(qApp->applicationDirPath() + "/plugins");
+
     VlcQml::registerTypes();
 
     startInitialization();
