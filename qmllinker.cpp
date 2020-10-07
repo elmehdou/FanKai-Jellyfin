@@ -101,3 +101,14 @@ void QmlLinker::setViewType(const ViewType &value)
     viewType = value;
     emit viewTypeChanged();
 }
+
+int QmlLinker::getVolume() const
+{
+    return volume;
+}
+
+void QmlLinker::setVolume(int value)
+{
+    volume = value;
+    emit volumeChanged();
+}

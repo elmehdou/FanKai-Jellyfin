@@ -12,6 +12,7 @@ class QmlLinker : public QObject
     Q_PROPERTY(bool playerShow READ getPlayerShow WRITE setPlayerShow NOTIFY playerShowChanged)
     Q_PROPERTY(bool playerFullscreen READ getPlayerFullscreen WRITE setPlayerFullscreen NOTIFY playerFullscreenChanged)
     Q_PROPERTY(ViewType viewType READ getViewType WRITE setViewType NOTIFY viewTypeChanged)
+    Q_PROPERTY(int volume READ getVolume WRITE setVolume NOTIFY volumeChanged)
 
 private:
     explicit QmlLinker(QQmlApplicationEngine *engine);
@@ -52,6 +53,9 @@ public:
     ViewType getViewType() const;
     void setViewType(const ViewType &value);
 
+    int getVolume() const;
+    void setVolume(int value);
+
 private:
     inline static QmlLinker *instance = nullptr;
     inline static QQmlApplicationEngine *engine = nullptr;
@@ -59,12 +63,12 @@ private:
     bool playerShow;
     bool playerFullscreen;
     ViewType viewType;
-
+    int volume;
 signals:
     void playerShowChanged();
     void playerFullscreenChanged();
     void viewTypeChanged();
-
+    void volumeChanged();
 };
 
 Q_DECLARE_METATYPE(QmlLinker::ViewType)

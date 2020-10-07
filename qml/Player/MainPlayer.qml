@@ -20,6 +20,7 @@ Rectangle {
                 seekSlider.value = mediaPlayer.time;
             }
         }
+        volume: QmlState.volume
     }
 
     VlcVideoOutput {
@@ -139,6 +140,16 @@ Rectangle {
                     text: formatTime(seekSlider.value) + "/" + formatTime(mediaPlayer.length)
                     color: "white"
                     opacity: 0.5
+                }
+
+                Slider {
+                    id: volumeSlider
+                    Layout.margins: 10
+                    Layout.minimumWidth: 50
+                    to: 100
+                    onValueChanged: {
+                        mediaPlayer.volume = value
+                    }
                 }
 
                 PlayerButton {
