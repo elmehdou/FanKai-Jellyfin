@@ -14,7 +14,7 @@ Rectangle {
 
     VlcPlayer {
         id: mediaPlayer
-//        logLevel: Vlc.ErrorLevel
+        volume: QmlState.volume
         onTimeChanged: {
             if (Math.abs(seekSlider.value - mediaPlayer.time) > 1000){
                 seekSlider.value = mediaPlayer.time;
@@ -39,7 +39,7 @@ Rectangle {
         Timer {
             property int lastTime: 0
             repeat: true
-            running: true
+            running: mediaPlayer.url.toString().length ? true : false
             interval: 1000
             onTriggered: {
                 if (    ![Vlc.Paused, Vlc.Stopped].includes(mediaPlayer.state) &&
@@ -141,10 +141,23 @@ Rectangle {
                     opacity: 0.5
                 }
 
+                Slider {
+                    id: volumeSlider
+                    Layout.margins: 10
+                    Layout.minimumWidth: 50
+                    to: 100
+                    onValueChanged: {
+                        QmlState.volume = value
+                    }
+                    Component.onCompleted: {
+                        value = QmlState.volume;
+                    }
+                }
+
                 PlayerButton {
                     id: subtitleButton
-                    source: "qrc:/images/closed-caption.svg"
                     Layout.margins: 10
+                    source: "qrc:/images/closed-caption.svg"
 
                     onClicked: function(mouse){ contextSubtitleMenu.popup() }
                     onPressAndHold: function(mouse){ if (mouse.source === Qt.MouseEventNotSynthesized) contextSubtitleMenu.popup() }

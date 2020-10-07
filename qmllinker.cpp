@@ -6,6 +6,7 @@ QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
   , playerShow(false)
   , playerFullscreen(false)
   , viewType(ViewType::ListView)
+  , volume(50)
 {
     QmlLinker::engine = engine;
 }
@@ -100,4 +101,15 @@ void QmlLinker::setViewType(const ViewType &value)
 {
     viewType = value;
     emit viewTypeChanged();
+}
+
+int QmlLinker::getVolume() const
+{
+    return volume;
+}
+
+void QmlLinker::setVolume(int value)
+{
+    volume = value;
+    emit volumeChanged();
 }
