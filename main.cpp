@@ -23,7 +23,10 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+
+    // Initialize QmlLinker singleton and load saved state
     QmlLinker::getInstance(&engine);
+    QmlLinker::getInstance()->load();
 
     if (!VlcCommon::setPluginPath("C:/Program Files/VideoLAN/VLC/plugins"))
         VlcCommon::setPluginPath(qApp->applicationDirPath() + "/plugins");

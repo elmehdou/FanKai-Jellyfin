@@ -89,4 +89,9 @@ ApplicationWindow {
         Qt.rootHeader = rootHeader;
     }
 
+    onClosing: {
+        console.log("Saving state");
+        QmlState.save();
+    }
+
 }

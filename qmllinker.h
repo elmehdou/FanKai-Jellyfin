@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include <QDataStream>
 #include <QQmlApplicationEngine>
 
 class QmlLinker : public QObject
@@ -29,6 +30,14 @@ public:
     };
     Q_ENUM(ViewType)
 
+    // Serialization
+    friend QDataStream &operator<<(QDataStream &stream, const QmlLinker &linker);
+    friend QDataStream &operator>>(QDataStream &stream, QmlLinker &linker);
+
+    Q_INVOKABLE void save(const QString &filename = "state.config");
+    Q_INVOKABLE void load(const QString &filename = "state.config");
+
+    // Method invokers
     static QObject *getRootObject();
 
     static void moveToPage(const QString &page);

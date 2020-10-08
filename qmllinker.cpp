@@ -1,6 +1,7 @@
 #include "qmllinker.h"
 
 #include <QDebug>
+#include <QFile>
 
 QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
   , playerShow(false)
@@ -11,6 +12,62 @@ QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
     QmlLinker::engine = engine;
 }
 
+// Serialization
+QDataStream &operator<<(QDataStream &stream, const QmlLinker &linker)
+{
+    stream << linker.volume;
+
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, QmlLinker &linker)
+{
+    int volume = 50;
+    stream >> volume;
+
+    linker.setVolume(volume);
+
+    return stream;
+}
+
+void QmlLinker::save(const QString &filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)){
+        qDebug() << "Could not open state file for writing.";
+        file.close();
+        return;
+    }
+
+    qDebug() << "Saving state to file";
+    QByteArray data;
+    QDataStream outStream(&data, QIODevice::WriteOnly);
+    outStream << *this;
+
+    file.write(data);
+
+    file.close();
+}
+
+void QmlLinker::load(const QString &filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)){
+        qDebug() << "Could not open state file for writing.";
+        file.close();
+        return;
+    }
+
+    qDebug() << "Loading state to file";
+    QDataStream inStream(file.readAll());
+    if (inStream.device()->bytesAvailable())
+        inStream >> *this;
+
+    file.close();
+}
+
+
+// Method invokers
 QObject *QmlLinker::getRootObject()
 {
     if (engine){
