@@ -25,10 +25,11 @@ ApplicationWindow {
         } else {
             Qt.mediaPlayer.play();
         }
+
         QmlState.playerShow = true;
 
         // update player url if needed
-        if (String(Qt.mediaPlayer.url) !== playerUrl){
+        if (playerUrl && String(Qt.mediaPlayer.url) !== playerUrl){
             Qt.mediaPlayer.url = playerUrl;
         }
     }

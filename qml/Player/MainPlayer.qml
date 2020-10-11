@@ -12,6 +12,33 @@ Rectangle {
     color: "black"
     anchors.fill: parent
 
+    focus: true
+    onFocusChanged: {if (visible) forceActiveFocus()}
+    onVisibleChanged: {if (visible) forceActiveFocus()}
+    Keys.onPressed: {
+        var seekIncrement = 3000;
+        if (event.modifiers & Qt.ShiftModifier) seekIncrement = 10000;
+        if (event.modifiers & Qt.ControlModifier) seekIncrement = 20000;
+        playerGuiContainer.opacity = 1.0;
+        switch(event.key){
+        case Qt.Key_Up:
+            volumeSlider.value += 5;            break;
+        case Qt.Key_Down:
+            volumeSlider.value -= 5;            break;
+        case Qt.Key_Left:
+            mediaPlayer.time -= seekIncrement;  break;
+        case Qt.Key_Right:
+            mediaPlayer.time += seekIncrement;  break;
+        case Qt.Key_Space:
+            playButton.onClicked();             break;
+        case Qt.Key_Escape:
+            closeButton.onClicked();            break;
+        case Qt.Key_F:
+            fullscreenButton.onClicked();       break;
+        }
+        event.accepted = true;
+    }
+
     VlcPlayer {
         id: mediaPlayer
         objectName: "mediaPlayer"
@@ -91,6 +118,7 @@ Rectangle {
             id: playerGuiContainer
             anchors.fill: parent
             PlayerButton {
+                id: closeButton
                 source: "qrc:/images/close.svg"
                 anchors.right: parent.right
                 onClicked: function(){
@@ -133,11 +161,15 @@ Rectangle {
                     Layout.margins: 10
                     Layout.fillWidth: true
                     to: mediaPlayer.length
+                    stepSize: 1000
                     onValueChanged: {
                         var newTime = seekSlider.value; // Multithreading is a bitch
                         if (pressed) {
                             mediaPlayer.time = newTime;
                         }
+                    }
+                    Keys.onPressed: {
+
                     }
                 }
 

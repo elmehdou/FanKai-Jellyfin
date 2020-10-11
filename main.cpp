@@ -8,6 +8,8 @@
 #include <VLCQtCore/Common.h>
 #include <VLCQtQml/Qml.h>
 
+#include <windows.h>
+
 void startInitialization(){
 
     qmlRegisterSingletonInstance<Jellyfin>("Jellyfin", 1, 0, "Jellyfin", Jellyfin::getInstance());

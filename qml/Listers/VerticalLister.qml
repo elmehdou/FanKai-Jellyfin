@@ -50,7 +50,7 @@ ListView {
 
     header: ListHeaderDelegate {}
 
-    delegate: ListDelegate {}
+    delegate: ListDelegate { width: rootList.width }
 
     populate: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 1000 }

@@ -41,7 +41,7 @@ GridView {
 
     id: rootList
     clip: true
-    cellWidth: width / Math.floor(width / 250)
+    cellWidth: Math.floor(width / Math.floor(width / 250))
     cellHeight: 400
     height: parent.height
 
@@ -49,7 +49,7 @@ GridView {
 
     header: ListHeaderDelegate {}
 
-    delegate: GridDelegate {width: rootList.width / Math.floor(rootList.width / 250)}
+    delegate: GridDelegate {width: Math.floor(rootList.width / Math.floor(rootList.width / 250))}
 
     populate: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 1000 }
