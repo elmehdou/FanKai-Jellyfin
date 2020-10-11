@@ -5,6 +5,8 @@ import QtQuick.Controls 2.12
 import Jellyfin 1.0
 import Node 1.0
 
+import "qrc:/qml/CustomComponents"
+
 Rectangle {
     width: parent.width
     height: childrenRect.height
@@ -20,6 +22,7 @@ Rectangle {
     RowLayout {
         width: parent.width
         height: 60
+        spacing: 0
 
         Image {
             Layout.preferredWidth: 180
@@ -36,6 +39,18 @@ Rectangle {
             font.bold: true
             text: modelData.name
             Layout.fillWidth: true
+            Layout.margins: 10
+        }
+
+        VLayoutSeparator {visible: modelData.indexNumber ? true : false}
+
+        Text{
+            color: "white"
+            font.bold: true
+            text: modelData.indexNumber ? modelData.indexNumber : ""
+            Layout.preferredWidth: 50
+            horizontalAlignment: Text.AlignHCenter
+            visible: modelData.indexNumber ? true : false
         }
     }
 
