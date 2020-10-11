@@ -5,6 +5,7 @@
 
 #include <QDataStream>
 #include <QQmlApplicationEngine>
+#include <VLCQtQml/QmlPlayer.h>
 
 class QmlLinker : public QObject
 {
@@ -37,8 +38,13 @@ public:
     Q_INVOKABLE void save(const QString &filename = "state.config");
     Q_INVOKABLE void load(const QString &filename = "state.config");
 
+    Q_INVOKABLE void disableScreenSaver();
+    Q_INVOKABLE void enableScreenSaver();
+
     // Method invokers
     static QObject *getRootObject();
+
+    static VlcQmlPlayer *getMediaPlayer();
 
     static void moveToPage(const QString &page);
 

@@ -28,8 +28,13 @@ Jellyfin::Jellyfin() : QObject()
   , seriesHash()
   , seasonsHash()
   , episodesHash()
+  , progressUpdateLoop()
 {
     rootNode->setName("Main menu");
+
+    progressUpdateLoop.setInterval(5000);
+    progressUpdateLoop.callOnTimeout(this, &Jellyfin::notifyProgress);
+    progressUpdateLoop.start();
 }
 
 void Jellyfin::login(const QString &username, const QString &password, bool rememberUser)
@@ -174,6 +179,62 @@ void Jellyfin::updateEpisodes(Sptr<Node> series, Sptr<Node> season)
     setWorking(true);
 }
 
+void Jellyfin::updatePlaybackInfo()
+{
+    // Clear current playsessionid
+    setCurrentPlaySessionId("");
+
+    Sptr<Episode> episode = currentEpisode.dynamicCast<Episode>();
+    if (!episode) return;
+
+    VlcQmlPlayer *player = QmlLinker::getMediaPlayer();
+    if (!player) return;
+
+    // Initials checks
+    if (accessToken.isEmpty()){
+        qDebug() << "[ updatePlaybackInfo update ] Access Token is empty.";
+        return;
+    }
+
+    QString episodeId = episode->getId();
+    if (episodeId.isEmpty()){
+        qDebug() << "[ updatePlaybackInfo update ] No episode id.";
+        return;
+    }
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+
+    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
+        QByteArray responseData = reply->readAll();
+
+        if (reply->error() != QNetworkReply::NoError){
+            qDebug() << "[ Login ] Authentication Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        QJsonObject jsonData = QJsonDocument::fromJson(responseData).object();
+        if (jsonData.isEmpty()){
+            qDebug() << "[ Login ] Json Parsing Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        // Update PlaySessionId
+        setCurrentPlaySessionId(jsonData.value("PlaySessionId").toString());
+
+        manager->deleteLater();
+    });
+
+    QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), QString::number(player->audioTrack()), QString::number(player->subtitleTrack()));
+    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
+    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
+
+    manager->get(request);
+}
+
 void Jellyfin::play(Sptr<Episode> episode)
 {
     // Initials checks
@@ -188,18 +249,286 @@ void Jellyfin::play(Sptr<Episode> episode)
         return;
     }
 
-    QString targetUrl = Jellyfin::webmFileUrl.arg(episodeId, accessToken);
+    VlcQmlPlayer *player = QmlLinker::getMediaPlayer();
+    if (!player) return;
 
-    Sptr<Node> season = episode->getParentNode();
-    Sptr<Node> series = season->getParentNode();
+    // Clear current playsessionid
+    setCurrentPlaySessionId("");
 
-    setCurrentSeriesQ(series.data());
-    setCurrentSeasonQ(season.data());
-    setCurrentEpisodeQ(episode.data());
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
 
-    QmlLinker::goToPlayer(targetUrl);
-    QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
-                                       QString("Lancement du film: %1").arg(episode->getName()));
+    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
+        QByteArray responseData = reply->readAll();
+
+        if (reply->error() != QNetworkReply::NoError){
+            qDebug() << "[ Login ] Authentication Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        QJsonObject jsonData = QJsonDocument::fromJson(responseData).object();
+        if (jsonData.isEmpty()){
+            qDebug() << "[ Login ] Json Parsing Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        // Update PlaySessionId
+        setCurrentPlaySessionId(jsonData.value("PlaySessionId").toString());
+
+        // Start playing based on PlaySessionId
+        QString targetUrl = Jellyfin::WebmFileUrl.arg(episodeId, accessToken, currentPlaySessionId);
+
+        Sptr<Node> season = episode->getParentNode();
+        Sptr<Node> series = season->getParentNode();
+
+        notifyStopped();
+
+        setCurrentSeriesQ(series.data());
+        setCurrentSeasonQ(season.data());
+        setCurrentEpisodeQ(episode.data());
+
+        updatePlaybackInfo();
+
+        QmlLinker::goToPlayer(targetUrl);
+        QmlLinker::createNotificationModal(QString("Playing %2").arg(episode->getName()),
+                                           QString("Lancement du film: %1").arg(episode->getName()));
+
+        notifyPlaying();
+
+        manager->deleteLater();
+    });
+
+    QString targetUrl = Jellyfin::PlaybackInfoUrl.arg(episodeId, user->getId(), QString::number(player->audioTrack()), QString::number(player->subtitleTrack()));
+    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
+    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
+
+    manager->get(request);
+}
+
+void Jellyfin::notifyPlaying()
+{
+    Sptr<Episode> episode = currentEpisode.dynamicCast<Episode>();
+    if (!episode) return;
+
+    VlcQmlPlayer *player = QmlLinker::getMediaPlayer();
+    if (!player) return;
+
+    // Initials checks
+    if (accessToken.isEmpty()){
+        qDebug() << "[ postProgress update ] Access Token is empty.";
+        return;
+    }
+
+    QString episodeId = episode->getId();
+    if (episodeId.isEmpty()){
+        qDebug() << "[ postProgress update ] No episode id.";
+        return;
+    }
+
+    int volume = player->volume();
+    volume = volume < 0 ? 0 : volume;
+    int positionTicks = player->time();
+    positionTicks = positionTicks < 0 ? 0 : positionTicks;
+
+    QJsonObject playingJsonData{{"VolumeLevel",            volume },
+                                {"IsMuted",                volume ? false : true},
+                                {"IsPaused",               player->state() == Vlc::Playing ? false : true},
+                                {"RepeatMode",             "RepeatNone"},
+                                {"MaxStreamingBitrate",    9225700},
+                                {"PositionTicks",          positionTicks},
+                                {"PlaybackStartTimeTicks", 16021732543690000},
+                                {"SubtitleStreamIndex",    3},
+                                {"AudioStreamIndex",       1},
+                                {"BufferedRanges",         QJsonArray{}},
+                                {"NowPlayingQueue",        QJsonArray{
+                                                            QJsonObject{
+                                                                {"Id",              episodeId},
+                                                                {"PlaylistItemId",  QString("playlistItem%1").arg(QString::number(episode->getIndexNumber()))}}
+                                                            }},
+                                {"PlayMethod",             "DirectStream"},
+                                {"PlaySessionId",          ""},
+                                {"PlaylistItemId",         QString("playlistItem%1").arg(QString::number(episode->getIndexNumber()))},
+                                {"MediaSourceId",          episodeId},
+                                {"CanSeek",                true},
+                                {"ItemId",                 episodeId}};
+
+    QByteArray playingData = QJsonDocument(playingJsonData).toJson();
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+
+    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
+
+        if (reply->error() != QNetworkReply::NoError){
+            qDebug() << "[ Login ] Authentication Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        reply->manager()->deleteLater();
+        setWorking(false);
+    });
+
+    QString targetUrl = Jellyfin::PlayingUrl;
+    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
+    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentLengthHeader, playingData.size());
+
+    manager->post(request, playingData);
+    setWorking(true);
+}
+
+void Jellyfin::notifyStopped()
+{
+    // Initials checks
+    Sptr<Episode> episode = currentEpisode.dynamicCast<Episode>();
+    if (!episode) return;
+
+    if (currentPlaySessionId.isEmpty()) return;
+
+    VlcQmlPlayer *player = QmlLinker::getMediaPlayer();
+    if (!player) return;
+
+    if (accessToken.isEmpty()){
+        qDebug() << "[ postProgress update ] Access Token is empty.";
+        return;
+    }
+
+    QString episodeId = episode->getId();
+    if (episodeId.isEmpty()){
+        qDebug() << "[ postProgress update ] No episode id.";
+        return;
+    }
+
+    int volume = player->volume();
+    volume = volume < 0 ? 0 : volume;
+    int positionTicks = player->time();
+    positionTicks = positionTicks < 0 ? 0 : positionTicks;
+
+    QJsonObject stoppedJsonData{{"VolumeLevel",               volume },
+                                {"IsMuted",                volume ? false : true},
+                                {"IsPaused",               player->state() == Vlc::Playing ? false : true},
+                                {"RepeatMode",             "RepeatNone"},
+                                {"MaxStreamingBitrate",    9225700},
+                                {"PositionTicks",          positionTicks},
+                                {"PlaybackStartTimeTicks", 16021732543690000},
+                                {"SubtitleStreamIndex",    player->subtitleTrack()},
+                                {"AudioStreamIndex",       player->audioTrack()},
+                                {"BufferedRanges",         QJsonArray{}},
+                                {"NowPlayingQueue",        QJsonArray{}},
+                                {"PlayMethod",             "Transcode"},
+                                {"PlaySessionId",          currentPlaySessionId},
+                                {"PlaylistItemId",         QString("playlistItem%1").arg(QString::number(episode->getIndexNumber()))},
+                                {"MediaSourceId",          episodeId},
+                                {"CanSeek",                true},
+                                {"ItemId",                 episodeId},
+                                {"NowPlayingQueue",        QJsonArray{
+                                                                QJsonObject{
+                                                                    {"Id",              episodeId},
+                                                                    {"PlaylistItemId",  QString("playlistItem%1").arg(QString::number(episode->getIndexNumber()))}}
+                                                                }}
+                                };
+
+    QByteArray stoppedData = QJsonDocument(stoppedJsonData).toJson();
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+
+    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
+
+        if (reply->error() != QNetworkReply::NoError){
+            qDebug() << "[ Login ] Authentication Error.";
+            QmlLinker::createMessageModal("Échec de connexion", QString("Nous sommes dans l'impossibilité de nous connecter au serveur sélectionné. Veuillez vérifier qu'il est opérationnel et réessayez."));
+            manager->deleteLater();
+            return;
+        }
+
+        reply->manager()->deleteLater();
+        setWorking(false);
+    });
+
+    QString targetUrl = Jellyfin::PlayingUrl;
+    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
+    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentLengthHeader, stoppedData.size());
+
+    manager->post(request, stoppedData);
+    setWorking(true);
+}
+
+void Jellyfin::notifyProgress()
+{
+
+    // Initials checks
+    Sptr<Episode> episode = currentEpisode.dynamicCast<Episode>();
+    if (!episode) return;
+
+    if (currentPlaySessionId.isEmpty()) return;
+
+    VlcQmlPlayer *player = QmlLinker::getMediaPlayer();
+    if (!player) return;
+
+    if (accessToken.isEmpty()){
+        qDebug() << "[ postProgress update ] Access Token is empty.";
+        return;
+    }
+
+    QString episodeId = episode->getId();
+    if (episodeId.isEmpty()){
+        qDebug() << "[ postProgress update ] No episode id.";
+        return;
+    }
+
+    int volume = player->volume();
+    volume = volume < 0 ? 0 : volume;
+    int positionTicks = player->time();
+    positionTicks = positionTicks < 0 ? 0 : positionTicks;
+
+    QJsonObject progressJsonData{{"VolumeLevel",               volume },
+                                    {"IsMuted",                volume ? false : true},
+                                    {"IsPaused",               player->state() == Vlc::Playing ? false : true},
+                                    {"RepeatMode",             "RepeatNone"},
+                                    {"MaxStreamingBitrate",    9225700},
+                                    {"PositionTicks",          positionTicks},
+                                    {"PlaybackStartTimeTicks", 16021732543690000},
+                                    {"SubtitleStreamIndex",    player->subtitleTrack()},
+                                    {"AudioStreamIndex",       player->audioTrack()},
+                                    {"BufferedRanges",         QJsonArray{}},
+                                    {"PlayMethod",             "Transcode"},
+                                    {"PlaySessionId",          currentPlaySessionId},
+                                    {"PlaylistItemId",         QString("playlistItem%1").arg(QString::number(episode->getIndexNumber()))},
+                                    {"MediaSourceId",          episodeId},
+                                    {"CanSeek",                true},
+                                    {"ItemId",                 episodeId},
+                                    {"EventName",              "timeupdate"}};
+
+    QByteArray progressData = QJsonDocument(progressJsonData).toJson();
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+
+    QObject::connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply){
+
+        if (reply->error() != QNetworkReply::NoError){
+            reply->manager()->deleteLater();
+            return;
+        }
+
+        reply->manager()->deleteLater();
+        setWorking(false);
+    });
+
+    QString targetUrl = Jellyfin::ProgressUrl;
+    QNetworkRequest request = QNetworkRequest(QUrl(targetUrl));
+    request.setRawHeader("X-Emby-Authorization", Jellyfin::AccessHeader.arg(deviceId, accessToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentLengthHeader, progressData.size());
+
+    manager->post(request, progressData);
+    setWorking(true);
 }
 
 // SETTERS GETTERS
@@ -292,4 +621,14 @@ void Jellyfin::setCurrentEpisodeQ(Node *node)
 {
     currentEpisode = node->sharedFromThis();
     emit currentEpisodeChanged();
+}
+
+QString Jellyfin::getCurrentPlaySessionId() const
+{
+    return currentPlaySessionId;
+}
+
+void Jellyfin::setCurrentPlaySessionId(const QString &value)
+{
+    currentPlaySessionId = value;
 }

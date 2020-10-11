@@ -92,6 +92,7 @@ ApplicationWindow {
     onClosing: {
         console.log("Saving state");
         QmlState.save();
+        QmlState.enableScreenSaver();
     }
 
 }

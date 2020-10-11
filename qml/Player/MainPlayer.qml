@@ -14,11 +14,20 @@ Rectangle {
 
     VlcPlayer {
         id: mediaPlayer
+        objectName: "mediaPlayer"
         volume: QmlState.volume
         onTimeChanged: {
             if (Math.abs(seekSlider.value - mediaPlayer.time) > 1000){
                 seekSlider.value = mediaPlayer.time;
             }
+        }
+
+        onAudioTrackChanged: {
+            Jellyfin.updatePlaybackInfo();
+        }
+
+        onSubtitleTrackChanged: {
+            Jellyfin.updatePlaybackInfo();
         }
     }
 
@@ -101,8 +110,13 @@ Rectangle {
                     Layout.margins: 10
                     source: mediaPlayer.state !== Vlc.Playing ? "qrc:/images/play.svg" : "qrc:/images/pause.svg"
                     onClicked: function(mouse){
-                        if (mediaPlayer.state !== Vlc.Playing) mediaPlayer.play();
-                        else mediaPlayer.pause();
+                        if (mediaPlayer.state !== Vlc.Playing) {
+                            mediaPlayer.play();
+                            QmlState.disableScreenSaver();
+                        }else{
+                            mediaPlayer.pause();
+                            QmlState.enableScreenSaver();
+                        }
                     }
                 }
 

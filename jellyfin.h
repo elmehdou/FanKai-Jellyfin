@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QNetworkReply>
 #include <QSharedPointer>
+#include <QTimer>
 
 template <typename T>
 using Sptr = QSharedPointer<T>;
@@ -39,8 +40,12 @@ public:
     Q_INVOKABLE void updateSeries();
     Q_INVOKABLE void updateSeasons(Sptr<Node> show);
     Q_INVOKABLE void updateEpisodes(Sptr<Node> show, Sptr<Node> season);
+    Q_INVOKABLE void updatePlaybackInfo();
 
     void play(Sptr<Episode> episode);
+    void notifyPlaying();
+    void notifyStopped();
+    void notifyProgress();
 
     // SETTERS - GETTERS
     QString getAccessToken() const;
@@ -69,6 +74,9 @@ public:
     Node *getCurrentEpisodeQ() const;
     void setCurrentEpisodeQ(Node *node);
 
+    QString getCurrentPlaySessionId() const;
+    void setCurrentPlaySessionId(const QString &value);
+
 
 private:
 
@@ -79,22 +87,33 @@ public:
 
     inline static const QString LoginUrl = "https://fankai.fr/Users/authenticatebyname";
 
-    // Args: deviceId   - accessToken
+    // API URLs
+    //
     // Args: User id
-    // Args: Series id  - User id
-    // Args: Series id  - Season id   - User id
-    // Args: Episode id - User id     - audioStream
-    // Args: Episode id - accessToken - audioStream - playSessionId
-    // Args: Episode id - accessToken
-    // Args: Item id    - maxHeight   - maxWidth - imageTag
-    inline static const QString AccessHeader    = "MediaBrowser Client=\"Jellyfin Web\", Device=\"Web Browser\", DeviceId=\"%1\", Version=\"10.4.3\", Token=\"%2\"";
+    //     : Series id  - User id
+    //     : Series id  - Season id   - User id
+    //     : Episode id - User id     - audioStream - subtitleStream
+    //     : Episode id - accessToken - audioStream - playSessionId
+    //     : Episode id - accessToken
+    //     : Episode id - accessToken - playSessionId
+    //     : Item id    - maxHeight   - maxWidth    - imageTag
+    //     : NONE
+    //     : NONE
     inline static const QString SeriesUrl       = "https://fankai.fr/Users/%1/Items?IncludeItemTypes=Series&Recursive=true&SortBy=SortName&SortOrder=Ascending";
     inline static const QString SeasonsUrl      = "https://fankai.fr/Shows/%1/Seasons?userId=%2&Fields=ItemCounts";
     inline static const QString EpisodesUrl     = "https://fankai.fr/Shows/%1/Episodes?seasonId=%2&userId=%3&SortBy=SortIndexNumber&SortOrder=Ascending&Fields=ItemCounts,MediaSourceCount";
-    inline static const QString PlaybackInfoUrl = "https://fankai.fr/Items/%1/PlaybackInfo?UserId=%2&AudioStreamIndex=%3";
-    inline static const QString m3u8FileUrl     = "https://fankai.fr/videos/%1/main.m3u8?&MediaSourceId=%1&api_key=%2&AudioStreamIndex=%3&PlaySessionId=%4";
-    inline static const QString webmFileUrl     = "https://fankai.fr/Videos/%1/stream.webm?Static=true&mediaSourceId=%1&api_key=%2";
+    inline static const QString PlaybackInfoUrl = "https://fankai.fr/Items/%1/PlaybackInfo?UserId=%2&AudioStreamIndex=%3&SubtitleStreamIndex=%4";
+    inline static const QString M3u8FileUrl     = "https://fankai.fr/videos/%1/main.m3u8?&MediaSourceId=%1&api_key=%2&AudioStreamIndex=%3&PlaySessionId=%4";
+    inline static const QString WebmFileUrl     = "https://fankai.fr/Videos/%1/stream.webm?Static=true&mediaSourceId=%1&api_key=%2&PlaySessionId=%3";
+    inline static const QString FileUrl         = "https://fankai.fr/Items/%1/Download?api_key=%2";
     inline static const QString PrimaryImageUrl = "https://fankai.fr/Items/%1/Images/Primary?maxHeight=%2&maxWidth=%3&tag=%4&quality=90";
+    inline static const QString PlayingUrl      = "https://fankai.fr/Sessions/Playing";
+    inline static const QString StoppedUrl      = "https://fankai.fr/Sessions/Playing/Stopped";
+    inline static const QString ProgressUrl     = "https://fankai.fr/Sessions/Playing/Progress";
+
+    // Request data
+    // Args: deviceId   - accessToken
+    inline static const QString AccessHeader    = "MediaBrowser Client=\"Jellyfin Web\", Device=\"Web Browser\", DeviceId=\"%1\", Version=\"10.4.3\", Token=\"%2\"";
 
 private:
     inline static Jellyfin *instance = nullptr;
@@ -115,6 +134,9 @@ private:
     QHash<QString,Sptr<Node>> seriesHash;
     QHash<QString,Sptr<Node>> seasonsHash;
     QHash<QString,Sptr<Node>> episodesHash;
+
+    QTimer progressUpdateLoop;
+    QString currentPlaySessionId;
 
 signals:
     void workingChanged();

@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QFile>
 
+#include <windows.h>
+
 QmlLinker::QmlLinker(QQmlApplicationEngine *engine): QObject()
   , playerShow(false)
   , playerFullscreen(false)
@@ -66,6 +68,16 @@ void QmlLinker::load(const QString &filename)
     file.close();
 }
 
+void QmlLinker::disableScreenSaver()
+{
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
+}
+
+void QmlLinker::enableScreenSaver()
+{
+    SetThreadExecutionState(ES_CONTINUOUS);
+}
+
 
 // Method invokers
 QObject *QmlLinker::getRootObject()
@@ -75,6 +87,19 @@ QObject *QmlLinker::getRootObject()
     }
 
     return nullptr;
+}
+
+VlcQmlPlayer *QmlLinker::getMediaPlayer()
+{
+    QObject *root = QmlLinker::getRootObject();
+    if (!root) {
+        qDebug() << "No engine in QmlLinker";
+        return nullptr;
+    }
+
+    VlcQmlPlayer *mediaPlayer = root->findChild<VlcQmlPlayer*>("mediaPlayer");
+
+    return mediaPlayer;
 }
 
 void QmlLinker::moveToPage(const QString &page)
