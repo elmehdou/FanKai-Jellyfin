@@ -56,6 +56,14 @@ Rectangle {
         onSubtitleTrackChanged: {
             Jellyfin.updatePlaybackInfo();
         }
+
+        onStateChanged: {
+            if (mediaPlayer.state === Vlc.Playing) {
+                QmlState.disableScreenSaver();
+            }else{
+                QmlState.enableScreenSaver();
+            }
+        }
     }
 
     VlcVideoOutput {
