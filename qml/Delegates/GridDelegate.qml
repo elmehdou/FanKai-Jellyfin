@@ -35,10 +35,31 @@ Item {
                 source: modelData.getPrimaryImage(219, 329)
                 sourceSize: Qt.size(219, 329)
                 fillMode: Image.PreserveAspectCrop
+
+                Item {
+                    id: overlay
+                    opacity: 0
+                    anchors.fill: parent
+                    Rectangle {
+                        color: "black"
+                        anchors.fill: parent
+                        opacity: 0.5
+                    }
+
+                    Image {
+                        width: parent.width * 0.3
+                        height: parent.width * 0.3
+                        source: "qrc:/images/play.svg"
+                        anchors.centerIn: parent
+                        sourceSize: Qt.size(parent.width * 0.3, parent.width * 0.3)
+                    }
+                }
+
             }
         }
 
         Text{
+            id: name
             color: "white"
             font.bold: true
             text: modelData.name
@@ -53,13 +74,23 @@ Item {
 
     MouseArea {
         anchors.fill: parent
+        hoverEnabled: true
         onClicked: {
             if (modelData.type !== Node.Episode){
                 modelData.updateChildren();
             } else {
                 modelData.play();
             }
+        }
 
+        onContainsMouseChanged: {
+            if (containsMouse) {
+                overlay.opacity = 1.0;
+                name.font.underline = true;
+            } else {
+                overlay.opacity = 0.0
+                name.font.underline = false;
+            }
         }
     }
 }
